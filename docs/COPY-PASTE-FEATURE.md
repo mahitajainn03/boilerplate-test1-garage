@@ -59,6 +59,19 @@ If a folder in a path doesn't exist yet (e.g. `frontend/src/features/notes/actio
 
 ```typescript
 import type { Timestamp } from 'firebase/firestore'
+export interface UserProfile {
+  uid: string
+  email: string
+  displayName: string | null
+  photoURL: string | null
+  role: 'user'
+  createdAt: Timestamp
+  updatedAt: Timestamp
+  _schemaVersion: 1
+}
+
+export type CreateUserProfileInput = Omit<UserProfile, 'createdAt' | 'updatedAt'>
+
 
 /**
  * Firestore collection type definitions.
@@ -103,6 +116,28 @@ export interface Note {
 import { collection, doc, type CollectionReference, type DocumentData } from 'firebase/firestore'
 import { getClientDb } from './client'
 import type { Note, UserProfile } from '@/types/firestore'
+
+/**
+ * Creates a typed Firestore collection reference.
+ * Use this factory to add new collections — see docs/FIRESTORE-SCHEMA.md
+ */
+function typedCollection<T extends DocumentData>(path: string): CollectionReference<T> {
+  return collection(getClientDb(), path) as CollectionReference<T>
+}
+
+// ── Collections ──────────────────────────────────────────────────────────────
+// Add one export per Firestore collection. Keep in sync with:
+//   - src/types/firestore.ts
+//   - firebase/firestore.rules
+//   - docs/FIRESTORE-SCHEMA.md
+
+export function getUsersCollection() {
+  return typedCollection<UserProfile>('users')
+}
+
+export function userDoc(uid: string) {
+  return doc(getUsersCollection(), uid)
+}
 
 /**
  * Creates a typed Firestore collection reference.
